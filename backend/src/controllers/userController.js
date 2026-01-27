@@ -1,0 +1,27 @@
+const userService = require("../services/userService")
+const userServ = new userService;
+
+const signup = async (req,res) => {
+    try {
+        const user = await userServ.createUser(req.body);
+        return res.status(201).json({
+            data : user,
+            succes : true,
+            message : 'User Signed up successfully',
+            err : {}
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            data : {},
+            succes : false,
+            message : 'User signup failed',
+            err : error
+        })
+    }
+}
+
+module.exports = {
+    signup
+}

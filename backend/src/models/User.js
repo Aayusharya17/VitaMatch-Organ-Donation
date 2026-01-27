@@ -4,12 +4,10 @@ const userSchema= new mongoose.Schema({
     name:{
         type:String,
         required:true
-    }
-    ,
+    },
     email:{
         type:String,
-    }
-    ,
+    },
     password:{
         type:String,
         required:true
@@ -21,6 +19,12 @@ const userSchema= new mongoose.Schema({
     hospitalId: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Hospital" 
+    },
+    phoneNumber: {
+        type : Number
+    },
+    address: {
+        type : String
     }
     // ,
     // isVerified: { 
