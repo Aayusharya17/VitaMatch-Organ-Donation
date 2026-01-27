@@ -1,7 +1,4 @@
-const { useDeferredValue } = require("react");
-const { JWT_SECRET } = require("../config/serverConfig");
 const User = require("../models/User");
-const bcrypt = require('bcrypt');
 
 class userRepository {
 

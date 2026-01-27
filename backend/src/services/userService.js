@@ -1,4 +1,7 @@
 const userRepository = require("../repository/userRepo");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require("../config/serverConfig");
 
 class userService {
     constructor(){
@@ -29,7 +32,7 @@ class userService {
                 }
             });
 
-            const token = jwt.sign({id:user.id,email:user.email},JWT_SECRET,{expires_in:60*60});
+            const token = jwt.sign({id:user.id,email:user.email},JWT_SECRET,{expiresIn:60*60});
             return token;
         }
         catch(error){

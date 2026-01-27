@@ -24,9 +24,9 @@ const signup = async (req,res) => {
 
 const login = async (req,res) => {
     try {
-        const user = await userServ.login(req.body);
+        const token = await userServ.login(req.body);
         return res.status(201).json({
-            data : user,
+            data : token,
             succes : true,
             message : 'User Logged in successfully',
             err : {}
