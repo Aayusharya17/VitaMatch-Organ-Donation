@@ -1,6 +1,4 @@
-const DonatedOrgan = require("../models/DonatedOrgan");
 const User = require("../models/User");
-const RequestedOrgan = require('../models/RequestedOrgan');
 
 class userRepository {
 
@@ -20,26 +18,6 @@ class userRepository {
         } catch (error) {
             console.log(error);
             throw new Error('Error while logging in');
-        }
-    }
-
-    async createRequest(data){
-        try{
-            const requestedOrgan = RequestedOrgan.create(data);
-            return requestedOrgan;
-        }catch(error){
-            console.log(error);
-            throw new Error('Error while logging in');
-        }
-    }
-
-    async createDonation(data){
-        try {
-            const donation = await DonatedOrgan.create(data);
-            return donation;
-        } catch (error) {
-            console.log(error);
-            throw new Error('Error in donation creation');
         }
     }
 }

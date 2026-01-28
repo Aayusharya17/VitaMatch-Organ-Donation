@@ -69,60 +69,7 @@ class UserService {
     }
   }
 
-  async createDonation(data) {
-    try {
-      const { organName, bloodGroup, role, userId } = data;
-
-      if (role === "DONOR") {
-        return await this.userRepository.createDonation({
-          organName,
-          bloodGroup,
-          donor: "User",
-          donorId: userId,
-        });
-      }
-
-      const userObject = await User.findById(userId).select("hospitalId");
-
-      if (!userObject) {
-        throw new Error("User not found");
-      }
-
-      return await this.userRepository.createDonation({
-        organName,
-        bloodGroup,
-        donor: "Hospital",
-        donorId: userObject.hospitalId,
-      });
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
-  }
-
-  async requestOrgan(data) {
-    try {
-      if (data.role !== "DOCTOR") {
-        throw new Error("Only Doctor can request organ");
-      }
-
-      const doctor = await User.findById(data.userId);
-
-      if (!doctor) {
-        throw new Error("Doctor not found");
-      }
-
-      return await this.userRepository.createRequest({
-        organName: data.organName,
-        bloodGroup: data.bloodGroup,
-        hospitalId: doctor.hospitalId,
-        doctorName: doctor.name,
-      });
-    } catch (error) {
-      console.log(error);
-      throw new Error("Error in organ request");
-    }
-  }
+  
 }
 
 module.exports = UserService;
