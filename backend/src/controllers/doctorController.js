@@ -83,8 +83,27 @@ const acceptOrgan = async (req, res) => {
     }
 };
 
+const doctorDashboard = async (req, res) => {
+    try {
+        const doctorId = req.user.id;
+        const data = await doctorServ.doctorDashboard(doctorId);
+        res.status(200).json({
+            success: true,
+            message: "Doctor dashboard data fetched",
+            data
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     requestOrgan,
     acceptOrgan,
-    findAllAvailable
+    findAllAvailable,
+    doctorDashboard
 }

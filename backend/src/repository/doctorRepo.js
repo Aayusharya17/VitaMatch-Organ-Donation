@@ -45,6 +45,35 @@ class DoctorRepository {
             throw error;
         }
     }
+
+    async getDoctorRequests(doctorId){
+        try {
+            const requests = await RequestedOrgan.find({ doctorId })
+                .sort({ createdAt: -1 });
+            return requests;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    async getHospitalRequests(doctorId){
+        try {
+            const doctor = await User.findById(doctorId);
+            if(!doctor) throw new Error("Doctor not found");
+
+            const requests = await RequestedOrgan.find({
+                hospitalId: doctor.hospitalId
+            }).sort({ createdAt: -1 });
+
+            return requests;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+
 }
 
 module.exports = DoctorRepository;

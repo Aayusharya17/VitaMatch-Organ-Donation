@@ -71,6 +71,18 @@ class DoctorService {
 
     return allocation;
   }
+
+  async doctorDashboard(doctorId){
+    try {
+        const myRequests = await this.DoctorRepository.getDoctorRequests(doctorId);
+        const hospitalRequests = await this.DoctorRepository.getHospitalRequests(doctorId);
+        return { myRequests, hospitalRequests };
+    } catch (error) {
+        throw error;
+    }
+}
+
+
 }
 
 module.exports = DoctorService;

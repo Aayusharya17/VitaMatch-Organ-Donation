@@ -6,7 +6,6 @@ const {authMiddleware} = require('../../middleware/auth');
 router.post('/requestOrgan',authMiddleware,doctorController.requestOrgan); // working fine
 router.get('/availableOrgans',authMiddleware,doctorController.findAllAvailable); //working fine
 router.post("/accept-organ", authMiddleware, doctorController.acceptOrgan); // working fine
-
-
+router.get("/dashboard", authMiddleware, doctorController.doctorDashboard);
 
 module.exports = router;
