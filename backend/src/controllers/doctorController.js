@@ -1,28 +1,26 @@
 const { JWT_SECRET } = require("../config/serverConfig");
 const User = require("../models/User");
-const doctorService = require("../services/doctorService");
+const DoctorService = require("../services/doctorService");
 const jwt = require('jsonwebtoken');
 
-const doctorServ = new doctorService;
+const doctorServ = new DoctorService;
 
-const requestedOrgan = async (req,res) => {
+const requestOrgan = async (req,res) => {
     try {
+
+        if(!req.user || req.user.role == "DONOR"){
+            throw new Error('Not Authenticated');
+        }
+        const doctorId = req.user.id;
+        const role = req.user.role;
         const organName = req.body.organName ; 
         const bloodGroup = req.body.bloodGroup;
-        const token = req.headers['x-access-token'];
-        if(!token){
-             throw new Error('Token Not Found');
-        }
 
-        const decoded = jwt.verify(token,JWT_SECRET);
-        const userId = decoded.id;
-        const role=decoded.role;
-
-        const requestOrgan = await doctorServ.requestOrgan({
-            organName,bloodGroup,userId,role
+        const organ = await doctorServ.requestOrgan({
+            organName,bloodGroup,doctorId,role
         });
         return res.status(201).json({
-            data : requestOrgan,
+            data : organ,
             succes : true,
             message : 'Requested Successfully',
             err : {}
@@ -41,18 +39,18 @@ const requestedOrgan = async (req,res) => {
 
 const findAllAvailable = async (req,res) => {
     try {
-        const availableOrgans = await doctorServ.findAllAvailable(req.body.organName,req.body.bloodGroup);
+        const organName = req.body.organName;
+        const bloodGroup = req.body.bloodGroup;
+        const availableOrgans = await doctorServ.findAllAvailable({organName,bloodGroup});
         if(!availableOrgans){
             console.log("No such available organs")
         }
-
         return res.status(201).json({
             data : availableOrgans,
             succes : true,
             message : 'Fetched all available organs for donation',
             err : {}
         })
-
     } catch (error) {
         console.log(error)
         return res.status(500).json({
@@ -64,37 +62,17 @@ const findAllAvailable = async (req,res) => {
     }
 }
 
-const acceptOneOrgan = async (req,res) => {
+const acceptOrgan = async (req, res) => {
     try {
-        const token = req.headers['x-access-token'];
-        if(!token){
-             throw new Error('Token Not Found');
-        }
-
-        const decoded = jwt.verify(token,JWT_SECRET);
-        const userId = decoded.id;
-        const role=decoded.role;
-
-        if(role != "DOCTOR"){
-            throw new Error('Unauthorized!!')
-        }
-
-        const doctor = await User.findById(userId);
-
-        const allocation = await doctorServ.accept({
-            organId : req.body.organId,
-            doctorName : doctor.name,
-            hospitalId : doctor.hospitalId
-        })
-
+        const { organId, requestId } = req.body;
+        const doctorId = req.user.id;
+        const allocation = await doctorServ.acceptOrgan({ organId, requestId, doctorId });
         return res.status(201).json({
             data : allocation,
             succes : true,
-            message : 'Successfully matched',
+            message : 'Successfully reversed',
             err : {}
         })
-
-
     } catch (error) {
         console.log(error)
         return res.status(500).json({
@@ -104,10 +82,10 @@ const acceptOneOrgan = async (req,res) => {
             err : error
         })
     }
-}
+};
 
 module.exports = {
-    requestedOrgan,
-    findAllAvailable,
-    acceptOneOrgan
+    requestOrgan,
+    acceptOrgan,
+    findAllAvailable
 }

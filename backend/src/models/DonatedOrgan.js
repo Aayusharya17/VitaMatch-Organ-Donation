@@ -9,31 +9,41 @@ const donatedOrganSchema = new mongoose.Schema({
         type: String,
         enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
     },
-    donor: {
+    role: {
         type: String,
-        enum: ["User", "Hospital"],
+        enum: ["DONOR", "DOCTOR"],
         required: true
     },
     donorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: "donor"
+        refPath: "role"
+    },
+    phoneNumber : {
+        type : String
     },
     hospitalId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Hospital"
+        ref: "Hospital",
+        default : null
     },
     address :{
         type : String
     },
+    consentId:{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Consent",
+        default : null
+    },
     status: {
         type: String,
-        enum: ["AVAILABLE", "ALLOCATED", "TRANSPLANTED", "EXPIRED"],
-        default: "AVAILABLE"
+        enum: ["PENDING_CONSENT","AVAILABLE", "ALLOCATED", "TRANSPLANTED", "EXPIRED"],
+        default: "PENDING_CONSENT"
     },
     allocationId : {
         type : mongoose.Schema.Types.ObjectId,
-        ref:"Allocation"
+        ref:"Allocation",
+        default : null
     }
 }, { timestamps: true });
 

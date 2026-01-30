@@ -4,7 +4,7 @@ const hospitalSchema = new mongoose.Schema({
     name : {
         type : String
     },
-    city : {
+    address : {
         type : String
     },
     doctor : [

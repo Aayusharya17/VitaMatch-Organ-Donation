@@ -1,69 +1,76 @@
+const DoctorRepository = require('../repository/doctorRepo');
 const Allocation = require("../models/Allocation");
 const DonatedOrgan = require("../models/DonatedOrgan");
-const User = require("../models/User");
-const donateRepo = require("../repository/donateOrganRepo");
-const requestOrgan = require("../repository/requestOrganRepo");
+const RequestedOrgan = require("../models/RequestedOrgan");
+const Notification = require("../models/Notification");
 
-class doctorService{
-    constructor(){
-        this.requestOrganRepo = new requestOrgan;
-        this.donateOrganRepo = new donateRepo;
+class DoctorService {
+  constructor() {
+    this.DoctorRepository = new DoctorRepository();
+  }
+
+  async requestOrgan(data) {
+    try {
+      const organ = await this.DoctorRepository.createRequest(data);
+      return organ;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
-    async requestOrgan(data) {
-        try {
-          const doctor = await User.findById(data.userId);
-          if (!doctor) {
-            throw new Error("Doctor not found");
-          }
-          return await this.requestOrganRepo.createRequest({
-            organName: data.organName,
-            bloodGroup: data.bloodGroup,
-            hospitalId: doctor.hospitalId,
-            doctorName: doctor.name
-          });
-        } catch (error) {
-          console.log(error);
-          throw new Error("Error in organ request");
-        }
+  }
+
+  async findAllAvailable(data) {
+    try {
+      const organs = await this.DoctorRepository.findAllAvailable(data);
+      return organs;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
+  }
 
-    async findAllAvailable(organName,bloodGroup){
-      try {
-        const availableOrgans = await this.donateOrganRepo.findAllAvailable(organName , bloodGroup)
-        return availableOrgans;
-      } catch (error) {
-        console.log(error);
-        throw new Error("Error in service");
-      }
-    }
+  async acceptOrgan({ organId, requestId }) {
 
-    async accept(data){
-      try {
-        const selectedOrgan = await DonatedOrgan.findById(data.organId);
-        if (!selectedOrgan) {
-          throw new Error("Organ not found");
-        }
+    const organ = await DonatedOrgan.findById(organId).populate("consentId");
+    if (!organ) throw new Error("Organ not found");
 
-        const allocation = await Allocation.create({
-          donorType: selectedOrgan.donor,
-          donorId: selectedOrgan.donorId,
-          requestDoctorName: data.doctorName,
-          hospitalId: data.hospitalId,
-          status: "matched"
-        });
+    if (organ.status !== "AVAILABLE")
+      throw new Error("Organ not available");
 
-        selectedOrgan.status = "ALLOCATED";
-        selectedOrgan.allocationId = allocation._id;
-        await selectedOrgan.save();
+    if (!organ.consentId || organ.consentId.status !== "VERIFIED")
+      throw new Error("Consent not verified");
 
-        return allocation;
+    const request = await RequestedOrgan.findById(requestId);
+    if (!request) throw new Error("Request not found");
 
-      } catch (error) {
-        console.log(error);
-        throw new Error("Error in service");
-      }
-    }
+    if (request.status !== "WAITING")
+      throw new Error("Request not valid");
 
+    const allocation = await Allocation.create({
+      organId,
+      requestId,
+      hospitalId: request.hospitalId,
+      matchScore: 100,
+      status: "PENDING_CONFIRMATION"
+    });
+
+    // Reserve organ and update request
+    organ.status = "RESERVED";
+    request.status = "PENDING_CONFIRMATION";
+    request.allocationId = allocation._id;
+
+    await organ.save();
+    await request.save();
+
+    // Notify donor
+    await Notification.create({
+      userId: organ.donorId,
+      message: "Hospital has requested transplant. Confirm or reject.",
+      allocationId: allocation._id
+    });
+
+    return allocation;
+  }
 }
 
-module.exports = doctorService;
+module.exports = DoctorService;

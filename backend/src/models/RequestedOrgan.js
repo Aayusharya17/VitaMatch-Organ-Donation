@@ -13,10 +13,17 @@ const requestedOrganSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Hospital"
     },
+    doctorId:{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "User"
+    },
     doctorName: {
         type : String
     },
     address : {
+        type : String
+    },
+    phoneNumber : {
         type : String
     },
     urgencyScore: {

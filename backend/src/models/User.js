@@ -29,11 +29,6 @@ const userSchema= new mongoose.Schema({
     address: {
         type : String
     }
-    // ,
-    // isVerified: { 
-    //     type: Boolean,
-    //      default: false 
-    // }
 })
 
 userSchema.pre('save' , async function(){
