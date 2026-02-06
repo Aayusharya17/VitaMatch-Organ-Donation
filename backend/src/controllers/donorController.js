@@ -59,8 +59,8 @@ const confirmDonation = async(req,res) => {
 
 const findAllRequests = async (req,res) => {
     try {
-        const bloodGroup = req.body.bloodGroup;
-        const organName = req.body.organName;
+        const bloodGroup = req.query.bloodGroup;
+        const organName = req.query.organName;
         const requests = await donorServ.findAllRequests({bloodGroup,organName})
         return res.status(201).json({
             data : requests,
@@ -86,7 +86,7 @@ const confirmAllocation = async (req, res) => {
 };
 
 const rejectAllocation = async (req, res) => {
-  const allocation = await DonorService.rejectAllocation(req.params.id);
+  const allocation = await donorServ.rejectAllocation(req.params.id);
   res.json({ success: true, allocation });
 };
 

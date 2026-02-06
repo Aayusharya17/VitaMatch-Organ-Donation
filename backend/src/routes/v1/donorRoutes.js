@@ -8,5 +8,6 @@ router.post('/confirmDonation',authMiddleware,donorController.confirmDonation); 
 router.get('/waitingOrgans',authMiddleware,donorController.findAllRequests); // working fine
 router.post("/confirm-allocation/:id", authMiddleware, donorController.confirmAllocation); // working fine
 router.post("/reject-allocation/:id", authMiddleware, donorController.rejectAllocation);
+router.get('/all', authMiddleware, donorController.findAll);
 
 module.exports = router;

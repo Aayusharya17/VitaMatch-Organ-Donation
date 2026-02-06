@@ -38,8 +38,8 @@ const requestOrgan = async (req,res) => {
 
 const findAllAvailable = async (req,res) => {
     try {
-        const organName = req.body.organName;
-        const bloodGroup = req.body.bloodGroup;
+        const organName = req.query.organName;
+        const bloodGroup = req.query.bloodGroup;
         const availableOrgans = await doctorServ.findAllAvailable({organName,bloodGroup});
         if(!availableOrgans){
             console.log("No such available organs")
