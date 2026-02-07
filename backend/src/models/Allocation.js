@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const allocationSchema = new mongoose.Schema({
+
   organId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "DonatedOrgan"
@@ -44,7 +45,23 @@ const allocationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     default: null
-  }
+  },
+
+  // -------- BLOCKCHAIN --------
+
+  lastBlockchainHash: {
+    type: String,
+    default: null
+  },
+
+  blockchainHistory: [
+    {
+      status: String,
+      hash: String,
+      txHash: String,
+      timestamp: Date
+    }
+  ]
 
 }, { timestamps: true });
 

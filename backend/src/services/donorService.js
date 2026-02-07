@@ -7,6 +7,7 @@ const userRepository = require("../repository/userRepo");
 const Notification = require("../models/Notification");
 const DonatedOrgan = require("../models/DonatedOrgan");
 const GeocodingService = require("./geocodingService");
+const BlockchainService = require("./blockchainService");
 
 class DonorService {
     constructor(){
@@ -14,6 +15,7 @@ class DonorService {
         this.DonorRepository = new DonorRepository
         this.requestOrganRepo = new requestOrgan
         this.geocodingService = new GeocodingService();
+        this.blockchainService = new BlockchainService();
     }
 
     async createDonation(data) {
@@ -59,6 +61,30 @@ class DonorService {
     await allocation.save();
     await organ.save();
     await request.save();
+
+    const newHash =
+      this.blockchainService.generateHash({
+        allocationId: allocation._id,
+        status: "MATCHED",
+        previousHash: allocation.lastBlockchainHash,
+        timestamp: Date.now()
+      });
+
+    const txHash =
+      await this.blockchainService
+        .writeHashToBlockchain(newHash);
+
+    allocation.lastBlockchainHash = newHash;
+
+    allocation.blockchainHistory.push({
+      status: "MATCHED",
+      hash: newHash,
+      txHash,
+      timestamp: new Date()
+    });
+
+    await allocation.save();
+
 
     await Notification.create({
     userId: request.createdByDoctorId,

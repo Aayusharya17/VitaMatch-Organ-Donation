@@ -127,22 +127,12 @@ async findAllAvailable(data, doctorId) {
     return allocation;
   }
 
-  async doctorDashboard(doctorId) {
-    const myRequests =
-      await this.DoctorRepository.getDoctorRequests(doctorId);
-
-    const hospitalRequests =
-      await this.DoctorRepository.getHospitalRequests(doctorId);
-
-    return { myRequests, hospitalRequests };
-  }
-
 async getDoctorAllocations(doctorId, status) {
   return await this.DoctorRepository
     .getDoctorAllocations(doctorId, status);
 }
 
-  async validateDoctorOwnership(allocationId, doctorId) {
+async validateDoctorOwnership(allocationId, doctorId) {
 
   const allocation = await Allocation.findById(allocationId);
   if (!allocation) throw new Error("Allocation not found");
@@ -183,6 +173,29 @@ async dispatchOrgan(allocationId, doctorId) {
 
   await allocation.save();
 
+  const newHash =
+    this.blockchainService.generateHash({
+      allocationId: allocation._id,
+      status: "DISPATCHED",
+      previousHash: allocation.lastBlockchainHash,
+      timestamp: Date.now()
+    });
+
+  const txHash =
+    await this.blockchainService
+      .writeHashToBlockchain(newHash);
+
+  allocation.lastBlockchainHash = newHash;
+
+  allocation.blockchainHistory.push({
+    status: "DISPATCHED",
+    hash: newHash,
+    txHash,
+    timestamp: new Date()
+  });
+
+  await allocation.save();
+
   return allocation;
 }
 
@@ -215,6 +228,29 @@ async completeAllocation(allocationId, doctorId) {
   await allocation.save();
   await organ.save();
   await request.save();
+
+  const newHash =
+    this.blockchainService.generateHash({
+      allocationId: allocation._id,
+      status: "COMPLETED",
+      previousHash: allocation.lastBlockchainHash,
+      timestamp: Date.now()
+    });
+
+  const txHash =
+    await this.blockchainService
+      .writeHashToBlockchain(newHash);
+
+  allocation.lastBlockchainHash = newHash;
+
+  allocation.blockchainHistory.push({
+    status: "COMPLETED",
+    hash: newHash,
+    txHash,
+    timestamp: new Date()
+  });
+
+  await allocation.save();
 
   return allocation;
 }
@@ -249,11 +285,52 @@ async failAllocation(allocationId, reason, doctorId) {
   await organ.save();
   await request.save();
 
+  const newHash =
+    this.blockchainService.generateHash({
+      allocationId: allocation._id,
+      status: "FAILED",
+      previousHash: allocation.lastBlockchainHash,
+      timestamp: Date.now()
+    });
+
+  const txHash =
+    await this.blockchainService
+      .writeHashToBlockchain(newHash);
+
+  allocation.lastBlockchainHash = newHash;
+
+  allocation.blockchainHistory.push({
+    status: "FAILED",
+    hash: newHash,
+    txHash,
+    timestamp: new Date()
+  });
+
+  await allocation.save();
+
   return allocation;
 }
 
+async doctorDashboard(doctorId) {
 
+  const myRequests =
+    await this.DoctorRepository
+      .getDoctorRequests(doctorId);
 
+  const hospitalRequests =
+    await this.DoctorRepository
+      .getHospitalRequests(doctorId);
+
+  const counts =
+    await this.DoctorRepository
+      .getDoctorDashboardCounts(doctorId);
+
+  return {
+    ...counts,
+    myRequests,
+    hospitalRequests
+  };
+}
 
 }
 

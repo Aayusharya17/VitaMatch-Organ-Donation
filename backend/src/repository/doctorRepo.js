@@ -26,7 +26,7 @@ class DoctorRepository {
           { $push: { request: organ._id } }
         );
       }
-      console.log(organ);
+
       return organ;
 
     } catch (error) {
@@ -35,25 +35,14 @@ class DoctorRepository {
     }
   }
 
-//   async findAllAvailable(data) {
-//   return await DonatedOrgan.find({
-//     organName: { $regex: `^${data.organName}$`, $options: "i" },
-//     bloodGroup: { $regex: `^${data.bloodGroup}$`, $options: "i" },
-//     status: "AVAILABLE"
-//   });
-// }
-
   async findAllAvailable(data) {
-  console.log("QUERY RECEIVED:", data);
-  const organs = await DonatedOrgan.find({
-    organName: data.organName,
-    bloodGroup: data.bloodGroup,
-    status: "AVAILABLE"
-  });
-  console.log("ORGANS FOUND:", organs.length);
-  return organs;
-}
-
+    const organs = await DonatedOrgan.find({
+      organName: data.organName,
+      bloodGroup: data.bloodGroup,
+      status: "AVAILABLE"
+    });
+    return organs;
+  }
 
   async getDoctorRequests(doctorId) {
     return await RequestedOrgan.find({ doctorId })
@@ -81,7 +70,7 @@ class DoctorRepository {
 
     if (statusFilter === "ALL_ACTIVE") {
       statusQuery.status = {
-        $in: ["PENDING_CONFIRMATION", "MATCHED", "IN_TRANSIT"]
+        $in: ["PENDING_CONFIRMATION", "MATCHED", "DISPATCHED"]
       };
     } else if (statusFilter && statusFilter !== "ALL") {
       statusQuery.status = statusFilter;
@@ -94,6 +83,52 @@ class DoctorRepository {
       .populate("organId", "organName bloodGroup status donorId")
       .populate("requestId", "organName urgencyScore status")
       .populate("hospitalId", "name");
+  }
+
+  // ================================
+  // NEW DASHBOARD COUNTS METHOD
+  // ================================
+  async getDoctorDashboardCounts(doctorId) {
+
+    const doctorRequests =
+      await RequestedOrgan.find({ doctorId })
+        .select("_id");
+
+    const requestIds =
+      doctorRequests.map(r => r._id);
+
+    const totalRequests = requestIds.length;
+
+    const activeAllocations =
+      await Allocation.countDocuments({
+        requestId: { $in: requestIds },
+        status: {
+          $in: [
+            "PENDING_CONFIRMATION",
+            "MATCHED",
+            "DISPATCHED"
+          ]
+        }
+      });
+
+    const completedTransplants =
+      await Allocation.countDocuments({
+        requestId: { $in: requestIds },
+        status: "COMPLETED"
+      });
+
+    const failedAllocations =
+      await Allocation.countDocuments({
+        requestId: { $in: requestIds },
+        status: "FAILED"
+      });
+
+    return {
+      totalRequests,
+      activeAllocations,
+      completedTransplants,
+      failedAllocations
+    };
   }
 }
 
