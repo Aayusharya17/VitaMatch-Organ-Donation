@@ -49,18 +49,20 @@ class DonorService {
       }
     }
 
-    async confirmAllocation(allocationId) {
-    const allocation = await Allocation.findById(allocationId);
-    const organ = await DonatedOrgan.findById(allocation.organId);
-    const request = await RequestedOrgan.findById(allocation.requestId);
+    async confirmAllocation(organId) {
+      const organ = await DonatedOrgan.findById(organId);
+      console.log(organ,organId)
+      const allocation = await Allocation.findById(organ.allocationId);
+    console.log(allocation)
+    // const request = await RequestedOrgan.findById(allocation.requestId);
 
     allocation.status = "MATCHED";
     organ.status = "ALLOCATED";
-    request.status = "MATCHED";
+    // request.status = "MATCHED";
 
     await allocation.save();
     await organ.save();
-    await request.save();
+    // await request.save();
 
     const newHash =
       this.blockchainService.generateHash({

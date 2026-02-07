@@ -83,11 +83,11 @@ async findAllAvailable(data, doctorId) {
   return enrichedOrgans;
 }
 
-  async acceptOrgan({ organId, requestId }) {
+  async acceptOrgan({ organId, requestId ,user}) {
 
     const organ =
       await DonatedOrgan.findById(organId).populate("consentId");
-
+    console.log(organ);
     if (!organ) throw new Error("Organ not found");
     if (organ.status !== "AVAILABLE")
       throw new Error("Organ not available");
@@ -96,12 +96,16 @@ async findAllAvailable(data, doctorId) {
         organ.consentId.status !== "VERIFIED")
       throw new Error("Consent not verified");
 
-    const request =
+    let request =
       await RequestedOrgan.findById(requestId);
+    
 
-    if (!request) throw new Error("Request not found");
-    if (request.status !== "WAITING")
-      throw new Error("Request not valid");
+    if (!request){
+      request={};
+      request.hospitalId = user.hospitalId;
+    }
+    // if (request.status !== "WAITING")
+    //   throw new Error("Request not valid");
 
     const allocation = await Allocation.create({
       organId,
@@ -110,13 +114,14 @@ async findAllAvailable(data, doctorId) {
       matchScore: 100,
       status: "PENDING_CONFIRMATION"
     });
-
+    
+    organ.allocationId = allocation._id;
     organ.status = "RESERVED";
     request.status = "PENDING_CONFIRMATION";
     request.allocationId = allocation._id;
 
     await organ.save();
-    await request.save();
+    // await request.save();
 
     await Notification.create({
       userId: organ.donorId,
